@@ -27,7 +27,7 @@ class MultiheadAttention(nn.Module):
         v_u = self.v(values)
 
         
-        return output, attention_weights
+        
 
 
     def scaled_dot_product_attention(self, query, key, value):
