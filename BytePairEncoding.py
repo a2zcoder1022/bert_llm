@@ -1,64 +1,65 @@
 
 import re
+from collections import defaultdict
+from typing import List, Tuple, Dict
+from dataclasses import dataclass, field
 
-class BytePairEncoding():
-    def __init__(self, vocab_size, corpus, merges=100):
-        assert corpus != [], "corpus is empty, please pass actual text data"
-        self.vocab_size = vocab_size
-        self.corpus = corpus
-        self.merge_count = merges
-        self.tokens = self.create_vocabulary()
+@dataclass
+class BytePairEncoding:
+
+    vocab_size: int
+    corpus: List[str]
+    merge_count: int = 100
+    tokens: List[str] = field(init=False)
     
+    def main__init__(self):
+        assert corpus != [], "corpus is empty, please pass actual text data"
+        self.tokens = self.create_vocabulary()
+
+    def clean_text(self, text:str) -> str:
+        return re.sub(r'\s+', ' ', text).strip().lower()
+        
+        
     # Initializing the vocabulary
     def create_vocabulary(self) -> list:
-        tokens = []
-        for text in self.corpus:
-            text_split = re.sub(r'\s+', ' ', text).strip()
-            for word in text_split.split(" "):
-                new_word = " ".join(list(word.lower())) + " _"
-                tokens.append(new_word)
-        return tokens
-
+        return [
+            " ".join(list(word.lower())) + " _"
+            for text in self.corpus for word in
+            self.clean_text(text).split()
+        ]
+    
     # Creating adjacent pairs 
-    def identify_pairs(self) -> None:
-        pairs = {}
+    def identify_pairs(self) -> Dict[Tuple[str, str], int]:
+        pairs = defaultdict(int)
         for token in self.tokens:
             seq = token.split(" ")
             for i in range(len(seq) - 1):
                 pair = (seq[i], seq[i + 1])
-                if pair in pairs:
-                    pairs[pair] += 1
-                else:
-                    pairs[pair] = 1
-        self.pairs = dict(sorted(pairs.items(), key=lambda x: x[1], reverse=True))
-        if len(self.pairs) > 0:
-            self.max_pair = list(self.pairs.keys())[0]
+                pairs[pair] += 1
+        return dict(pairs)
+
+    def merge_pair(self, token:str, pair: Tuple[str, str]) -> str:
+
+        first, second = token
+        merged_token = token.replace(f"{first} {second}", f"{first}{second}")
+        return merged_token
+
+    def apply_merges(self, most_frequent_pair: Tuple[str, str]):
+        self.tokens = [
+            self.merge_pair(token, most_frequent_pair)
+            for token in self.tokens
+        ]
+
+    def run_merge(self) -> None:
+        for i in range(self.merge_count):
+            pairs = self.identify_pairs()
+            if not pairs:
+                print("There are no more pairs")
+                break
+            most_frequent_pair = max(pairs, key=pairs.get)
+            self.apply_merges(most_frequent_pair)
+
+    def get_tokens(self) -> List[str]:
+        return self.tokens
+        
     
-    def merge(self) -> None:
-        j = 0
-        while j < self.merge_count:
-            self.identify_pairs()
-            new_tokens = []
-
-          
-            for token in self.tokens:
-                seq = token.split(" ") 
-                new_sentence = []
-                i = 0
-                while i < len(seq) - 1:
-                    
-                    if seq[i] == self.max_pair[0] and seq[i + 1] == self.max_pair[1]:
-                        new_sentence.append(seq[i] + seq[i + 1])
-                        i += 2 
-                    else:
-                        new_sentence.append(seq[i])
-                        i += 1  
-
-                if i == len(seq) - 1:
-                    new_sentence.append(seq[-1])
-
-                new_tokens.append(" ".join(new_sentence))
-
-     
-            self.tokens = new_tokens
-            j += 1
