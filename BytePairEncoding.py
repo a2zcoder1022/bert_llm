@@ -7,11 +7,10 @@ class BytePairEncoding():
         self.vocab_size = vocab_size
         self.corpus = corpus
         self.merge_count = merges
-        self.initial_vocab = self.create_vocabulary()
         self.tokens = self.create_vocabulary()
     
     # Initializing the vocabulary
-    def create_vocabulary(self):
+    def create_vocabulary(self) -> list:
         tokens = []
         for text in self.corpus:
             text_split = re.sub(r'\s+', ' ', text).strip()
@@ -21,7 +20,7 @@ class BytePairEncoding():
         return tokens
 
     # Creating adjacent pairs 
-    def identify_pairs(self):
+    def identify_pairs(self) -> None:
         pairs = {}
         for token in self.tokens:
             seq = token.split(" ")
@@ -34,8 +33,8 @@ class BytePairEncoding():
         self.pairs = dict(sorted(pairs.items(), key=lambda x: x[1], reverse=True))
         if len(self.pairs) > 0:
             self.max_pair = list(self.pairs.keys())[0]
-
-    def merge(self):
+    
+    def merge(self) -> None:
         j = 0
         while j < self.merge_count:
             self.identify_pairs()
