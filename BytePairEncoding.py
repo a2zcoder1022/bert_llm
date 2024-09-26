@@ -1,4 +1,3 @@
-
 import re
 from collections import defaultdict
 from typing import List, Tuple, Dict
@@ -12,7 +11,7 @@ class BytePairEncoding:
     merge_count: int = 100
     tokens: List[str] = field(init=False)
     
-    def main__init__(self):
+    def __post_init__(self):
         assert corpus != [], "corpus is empty, please pass actual text data"
         self.tokens = self.create_vocabulary()
 
@@ -21,7 +20,7 @@ class BytePairEncoding:
         
         
     # Initializing the vocabulary
-    def create_vocabulary(self) -> list:
+    def create_vocabulary(self) -> List[str]:
         return [
             " ".join(list(word.lower())) + " _"
             for text in self.corpus for word in
@@ -39,8 +38,7 @@ class BytePairEncoding:
         return dict(pairs)
 
     def merge_pair(self, token:str, pair: Tuple[str, str]) -> str:
-
-        first, second = token
+        first, second = pair
         merged_token = token.replace(f"{first} {second}", f"{first}{second}")
         return merged_token
 
@@ -57,9 +55,9 @@ class BytePairEncoding:
                 print("There are no more pairs")
                 break
             most_frequent_pair = max(pairs, key=pairs.get)
+            print(most_frequent_pair)
             self.apply_merges(most_frequent_pair)
 
     def get_tokens(self) -> List[str]:
         return self.tokens
         
-    
